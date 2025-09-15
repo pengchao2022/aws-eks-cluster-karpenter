@@ -15,10 +15,10 @@ output "karpenter_namespace" {
 
 output "karpenter_provisioner_name" {
   description = "Name of the default Karpenter Provisioner"
-  value       = kubernetes_manifest.karpenter_provisioner.manifest["metadata"]["name"]
+  value       = kubernetes_manifest.karpenter_provisioner.manifest[0].metadata.name
 }
 
 output "karpenter_awsnodetemplate_name" {
   description = "Name of the AWSNodeTemplate used by Karpenter"
-  value       = kubernetes_manifest.karpenter_awsnodetemplate.manifest["metadata"]["name"]
+  value       = kubernetes_manifest.karpenter_awsnodetemplate.manifest[0].metadata.name
 }
