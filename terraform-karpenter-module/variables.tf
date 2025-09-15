@@ -25,3 +25,8 @@ variable "karpenter_ttl_seconds_after_empty" {
   type        = number
   default     = 30
 }
+variable "karpenter_instance_types" {
+  description = "List of instance types for Karpenter nodes"
+  type        = list(string)
+  default     = ["t3.micro"]
+}

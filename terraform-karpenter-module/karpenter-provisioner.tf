@@ -18,6 +18,13 @@ resource "kubernetes_manifest" "karpenter_provisioner" {
     kind       = "Provisioner"
     metadata   = { name = "default" }
     spec = {
+      requirements = [
+        {
+          key      = "instance-type"
+          operator = "In"
+          values   = var.karpenter_instance_types
+        }
+      ]
       limits = {
         resources = { cpu = "1000" }
       }
