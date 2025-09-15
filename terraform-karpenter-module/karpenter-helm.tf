@@ -7,6 +7,7 @@ resource "helm_release" "karpenter" {
   chart   = "oci://public.ecr.aws/karpenter/karpenter"
   version = "1.6.3"
   wait    = true
+  timeout = 600
 
   values = [
     yamlencode({
