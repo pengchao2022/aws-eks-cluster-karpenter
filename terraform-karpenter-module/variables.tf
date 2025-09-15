@@ -17,7 +17,7 @@ variable "karpenter_namespace" {
 variable "karpenter_chart_version" {
   description = "Karpenter Helm chart version"
   type        = string
-  default     = "0.33.2"
+  default     = "v0.33.2"
 }
 
 variable "karpenter_ttl_seconds_after_empty" {
@@ -29,5 +29,5 @@ variable "karpenter_ttl_seconds_after_empty" {
 variable "karpenter_instance_types" {
   description = "List of instance types for Karpenter nodes"
   type        = list(string)
-  default     = ["t3.micro"]
+  default     = ["t3.medium"]
 }

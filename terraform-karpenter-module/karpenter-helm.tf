@@ -3,10 +3,10 @@ resource "helm_release" "karpenter" {
   name             = "karpenter"
   namespace        = var.karpenter_namespace
   create_namespace = true
-  repository       = "https://charts.karpenter.sh/"
+  repository       = "oci://public.ecr.aws/karpenter/karpenter"
   chart            = "karpenter"
   version          = var.karpenter_chart_version
-  wait             = true # 确保 Helm 安装完成后再执行下游资源
+  wait             = true
 
   values = [
     yamlencode({
