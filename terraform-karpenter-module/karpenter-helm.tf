@@ -3,10 +3,10 @@ resource "helm_release" "karpenter" {
   name             = "karpenter"
   namespace        = var.karpenter_namespace
   create_namespace = true
-  repository       = "https://charts.karpenter.sh/"
-  chart            = "karpenter"
-  version          = "v1.6.3"
-  wait             = true
+
+  chart   = "oci://public.ecr.aws/karpenter/karpenter"
+  version = "1.6.3"
+  wait    = true
 
   values = [
     yamlencode({
