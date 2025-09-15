@@ -11,7 +11,7 @@ data "aws_eks_cluster_auth" "this" {
 }
 
 resource "local_file" "kubeconfig" {
-  content = <<EOT
+  content  = <<EOT
 apiVersion: v1
 clusters:
 - cluster:
