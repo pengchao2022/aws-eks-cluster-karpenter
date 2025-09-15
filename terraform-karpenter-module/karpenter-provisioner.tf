@@ -1,8 +1,22 @@
+# 等待 Karpenter CRD 安装完成
+resource "null_resource" "wait_for_crd" {
+  provisioner "local-exec" {
+    command = <<EOT
+until kubectl get crd nodeclasses.karpenter.sh &>/dev/null; do
+  echo "Waiting for Karpenter CRD..."
+  sleep 5
+done
+EOT
+  }
+}
+
+# NodeClass
 resource "kubernetes_manifest" "karpenter_nodeclass" {
   provider = kubernetes.eks
 
   depends_on = [
-    helm_release.karpenter
+    helm_release.karpenter,
+    null_resource.wait_for_crd
   ]
 
   manifest = {
@@ -18,6 +32,7 @@ resource "kubernetes_manifest" "karpenter_nodeclass" {
   }
 }
 
+# Provisioner
 resource "kubernetes_manifest" "karpenter_provisioner" {
   provider = kubernetes.eks
 
