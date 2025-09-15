@@ -22,6 +22,5 @@ resource "helm_release" "karpenter" {
     })
   ]
 
-  # 使用 Kubernetes provider alias
-  depends_on = [kubernetes_manifest.karpenter_provisioner] # 保证资源顺序
+  depends_on = [kubernetes_manifest.karpenter_provisioner]
 }

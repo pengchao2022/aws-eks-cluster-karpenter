@@ -5,5 +5,5 @@ resource "aws_iam_role" "karpenter" {
 
 resource "aws_iam_role_policy_attachment" "karpenter_attach" {
   role       = aws_iam_role.karpenter.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterAutoscalerPolicy" # 可根据实际需求调整
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterAutoscalerPolicy"
 }

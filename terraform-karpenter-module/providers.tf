@@ -11,36 +11,14 @@ data "aws_eks_cluster_auth" "this" {
   name = var.cluster_name
 }
 
-# 生成 kubeconfig 文件
-resource "local_file" "kubeconfig" {
-  content  = <<EOT
-apiVersion: v1
-clusters:
-- cluster:
-    server: ${data.aws_eks_cluster.this.endpoint}
-    certificate-authority-data: ${data.aws_eks_cluster.this.certificate_authority[0].data}
-  name: eks
-contexts:
-- context:
-    cluster: eks
-    user: eks
-  name: eks
-current-context: eks
-kind: Config
-preferences: {}
-users:
-- name: eks
-  user:
-    token: ${data.aws_eks_cluster_auth.this.token}
-EOT
-  filename = "${path.module}/kubeconfig_temp.yaml"
-}
-
-# Kubernetes provider alias
+# Kubernetes provider，使用 EKS data 构建 host/ca/token
 provider "kubernetes" {
-  alias       = "eks"
-  config_path = local_file.kubeconfig.filename
+  alias = "eks"
+
+  host                   = data.aws_eks_cluster.this.endpoint
+  cluster_ca_certificate = base64decode(data.aws_eks_cluster.this.certificate_authority[0].data)
+  token                  = data.aws_eks_cluster_auth.this.token
 }
 
-# Helm provider 零配置
+# Helm provider 零配置，不要 kubernetes {} block
 provider "helm" {}
