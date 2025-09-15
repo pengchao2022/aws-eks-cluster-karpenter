@@ -1,4 +1,6 @@
+##################################################
 # 等待 Karpenter CRD 安装完成
+##################################################
 resource "null_resource" "wait_for_crd" {
   provisioner "local-exec" {
     command = <<EOT
@@ -10,7 +12,9 @@ EOT
   }
 }
 
+##################################################
 # NodeClass
+##################################################
 resource "kubernetes_manifest" "karpenter_nodeclass" {
   provider = kubernetes.eks
 
@@ -32,7 +36,9 @@ resource "kubernetes_manifest" "karpenter_nodeclass" {
   }
 }
 
+##################################################
 # Provisioner
+##################################################
 resource "kubernetes_manifest" "karpenter_provisioner" {
   provider = kubernetes.eks
 
