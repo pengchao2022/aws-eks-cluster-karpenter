@@ -3,8 +3,9 @@ resource "helm_release" "karpenter" {
   name             = "karpenter"
   namespace        = var.karpenter_namespace
   create_namespace = true
-  chart            = "${path.module}/charts/karpenter-1.6.3.tgz"
-  version          = "0.33.2"
+  repository       = "https://charts.karpenter.sh/"
+  chart            = "karpenter"
+  version          = "1.6.3"
   wait             = true
 
   values = [
