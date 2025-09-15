@@ -3,9 +3,8 @@ resource "helm_release" "karpenter" {
   name             = "karpenter"
   namespace        = var.karpenter_namespace
   create_namespace = true
-  repository       = "oci://public.ecr.aws/karpenter/karpenter"
-  chart            = "karpenter"
-  version          = var.karpenter_chart_version
+  chart            = "${path.module}/charts/karpenter-1.6.3.tgz"
+  version          = "0.33.2"
   wait             = true
 
   values = [
