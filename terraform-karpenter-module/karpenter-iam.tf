@@ -1,6 +1,14 @@
 resource "aws_iam_role" "karpenter" {
-  name               = "${var.cluster_name}-karpenter-role"
-  assume_role_policy = file("${path.module}/karpenter-policy.json")
+  name = "${var.cluster_name}-karpenter-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "ec2.amazonaws.com" }
+      Action    = "sts:AssumeRole"
+    }]
+  })
 }
 
 resource "aws_iam_role_policy_attachment" "karpenter_attach" {

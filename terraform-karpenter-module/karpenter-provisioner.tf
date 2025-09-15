@@ -1,3 +1,23 @@
+resource "kubernetes_manifest" "karpenter_nodeclass" {
+  provider = kubernetes.eks
+
+  depends_on = [
+    helm_release.karpenter
+  ]
+
+  manifest = {
+    apiVersion = "karpenter.sh/v1alpha5"
+    kind       = "NodeClass"
+    metadata   = { name = "default" }
+    spec = {
+      provider = {
+        subnetSelector        = { "kubernetes.io/cluster/${var.cluster_name}" = "owned" }
+        securityGroupSelector = { "kubernetes.io/cluster/${var.cluster_name}" = "owned" }
+      }
+    }
+  }
+}
+
 resource "kubernetes_manifest" "karpenter_provisioner" {
   provider = kubernetes.eks
 
@@ -17,9 +37,7 @@ resource "kubernetes_manifest" "karpenter_provisioner" {
           values   = var.karpenter_instance_types
         }
       ]
-      limits = {
-        resources = { cpu = "1000" }
-      }
+      limits               = { resources = { cpu = "1000" } }
       providerRef          = { name = kubernetes_manifest.karpenter_nodeclass.manifest[0].metadata.name }
       ttlSecondsAfterEmpty = var.karpenter_ttl_seconds_after_empty
     }

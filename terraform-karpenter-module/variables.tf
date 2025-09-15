@@ -1,33 +1,27 @@
 variable "aws_region" {
-  description = "AWS region"
   type        = string
+  description = "AWS region"
 }
 
 variable "cluster_name" {
-  description = "EKS cluster name"
   type        = string
+  description = "EKS cluster name"
 }
 
 variable "karpenter_namespace" {
-  description = "Namespace for Karpenter"
   type        = string
+  description = "Namespace for Karpenter"
   default     = "karpenter"
 }
 
-variable "karpenter_chart_version" {
-  description = "Karpenter Helm chart version"
-  type        = string
-  default     = "v0.33.2"
-}
-
 variable "karpenter_ttl_seconds_after_empty" {
-  description = "TTL for empty nodes"
   type        = number
+  description = "TTL for empty nodes"
   default     = 30
 }
 
 variable "karpenter_instance_types" {
-  description = "List of instance types for Karpenter nodes"
   type        = list(string)
+  description = "Instance types for Karpenter nodes"
   default     = ["t3.medium"]
 }
