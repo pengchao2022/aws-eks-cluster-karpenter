@@ -4,11 +4,22 @@
 resource "null_resource" "wait_for_crd" {
   provisioner "local-exec" {
     command = <<EOT
-until kubectl get crd nodeclasses.karpenter.sh &>/dev/null; do
-  echo "Waiting for Karpenter CRD..."
+set -e
+echo "Waiting for Karpenter CRD to be ready..."
+for i in {1..60}; do
+  if kubectl get crd nodeclasses.karpenter.sh &>/dev/null; then
+    echo "CRD is ready!"
+    exit 0
+  fi
+  echo "CRD not ready yet, sleeping 5s..."
   sleep 5
 done
+echo "CRD did not become ready in time"
+exit 1
 EOT
+    environment = {
+      KUBECONFIG = "${path.module}/kubeconfig_temp.yaml" # 指向你生成的 kubeconfig 文件
+    }
   }
 }
 
