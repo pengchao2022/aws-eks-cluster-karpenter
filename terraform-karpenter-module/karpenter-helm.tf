@@ -6,6 +6,7 @@ resource "helm_release" "karpenter" {
   repository       = "https://charts.karpenter.sh/"
   chart            = "karpenter"
   version          = var.karpenter_chart_version
+  wait             = true # 确保 Helm 安装完成后再执行下游资源
 
   values = [
     yamlencode({
@@ -21,6 +22,4 @@ resource "helm_release" "karpenter" {
       }
     })
   ]
-
-  depends_on = [kubernetes_manifest.karpenter_provisioner]
 }

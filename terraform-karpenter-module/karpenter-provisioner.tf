@@ -1,5 +1,10 @@
 resource "kubernetes_manifest" "karpenter_awsnodetemplate" {
   provider = kubernetes.eks
+
+  depends_on = [
+    helm_release.karpenter
+  ]
+
   manifest = {
     apiVersion = "karpenter.sh/v1alpha5"
     kind       = "AWSNodeTemplate"
@@ -13,6 +18,11 @@ resource "kubernetes_manifest" "karpenter_awsnodetemplate" {
 
 resource "kubernetes_manifest" "karpenter_provisioner" {
   provider = kubernetes.eks
+
+  depends_on = [
+    kubernetes_manifest.karpenter_awsnodetemplate
+  ]
+
   manifest = {
     apiVersion = "karpenter.sh/v1alpha5"
     kind       = "Provisioner"
