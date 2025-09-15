@@ -1,4 +1,5 @@
 resource "helm_release" "karpenter" {
+  provider         = helm
   name             = "karpenter"
   namespace        = var.karpenter_namespace
   create_namespace = true
@@ -20,4 +21,7 @@ resource "helm_release" "karpenter" {
       }
     })
   ]
+
+  # 使用 Kubernetes provider alias
+  depends_on = [kubernetes_manifest.karpenter_provisioner] # 保证资源顺序
 }

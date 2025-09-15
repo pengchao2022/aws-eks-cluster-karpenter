@@ -1,33 +1,27 @@
 variable "aws_region" {
-  description = "AWS region where the EKS cluster exists"
+  description = "AWS region"
   type        = string
 }
 
 variable "cluster_name" {
-  description = "Name of the existing EKS cluster"
+  description = "EKS cluster name"
   type        = string
 }
 
-variable "karpenter_instance_types" {
-  description = "List of EC2 instance types Karpenter is allowed to launch"
-  type        = list(string)
-  default     = ["t3.medium", "t3.large"]
-}
-
-variable "karpenter_ttl_seconds_after_empty" {
-  description = "TTL for empty nodes in seconds"
-  type        = number
-  default     = 30
-}
-
 variable "karpenter_namespace" {
-  description = "Namespace where Karpenter will be installed"
+  description = "Namespace for Karpenter"
   type        = string
   default     = "karpenter"
 }
 
 variable "karpenter_chart_version" {
-  description = "Helm chart version for Karpenter"
+  description = "Karpenter Helm chart version"
   type        = string
-  default     = "0.37.0"
+  default     = "0.33.2" # 请根据实际 Helm chart 版本调整
+}
+
+variable "karpenter_ttl_seconds_after_empty" {
+  description = "TTL for empty nodes"
+  type        = number
+  default     = 30
 }

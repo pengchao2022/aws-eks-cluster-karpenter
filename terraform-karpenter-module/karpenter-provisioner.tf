@@ -1,6 +1,7 @@
 resource "kubernetes_manifest" "karpenter_awsnodetemplate" {
+  provider = kubernetes.eks
   manifest = {
-    apiVersion = "karpenter.k8s.aws/v1alpha1"
+    apiVersion = "karpenter.sh/v1alpha5"
     kind       = "AWSNodeTemplate"
     metadata   = { name = "default" }
     spec = {
@@ -11,22 +12,16 @@ resource "kubernetes_manifest" "karpenter_awsnodetemplate" {
 }
 
 resource "kubernetes_manifest" "karpenter_provisioner" {
+  provider = kubernetes.eks
   manifest = {
     apiVersion = "karpenter.sh/v1alpha5"
     kind       = "Provisioner"
     metadata   = { name = "default" }
     spec = {
-      requirements = [
-        {
-          key      = "node.kubernetes.io/instance-type"
-          operator = "In"
-          values   = var.karpenter_instance_types
-        }
-      ]
       limits = {
         resources = { cpu = "1000" }
       }
-      providerRef          = { name = kubernetes_manifest.karpenter_awsnodetemplate.manifest["metadata"]["name"] }
+      providerRef          = { name = kubernetes_manifest.karpenter_awsnodetemplate.manifest[0].metadata.name }
       ttlSecondsAfterEmpty = var.karpenter_ttl_seconds_after_empty
     }
   }
