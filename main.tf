@@ -122,7 +122,7 @@ resource "aws_key_pair" "deployer" {
 
 # 创建 EC2 实例 (无公网IP)
 resource "aws_instance" "jenkins_server" {
-  ami                         = data.aws_ami.ubuntu.id
+  ami                         = "ami-0c7217cdde317cfec" # Ubuntu 20.04 LTS in us-east-1
   instance_type               = var.instance_type
   subnet_id                   = var.private_subnet_id # 使用私有子网
   key_name                    = aws_key_pair.deployer.key_name
@@ -141,22 +141,6 @@ resource "aws_instance" "jenkins_server" {
 
   tags = {
     Name = "jenkins-server"
-  }
-}
-
-# 获取最新的 Ubuntu AMI
-data "aws_ami" "ubuntu" {
-  most_recent = true
-  owners      = ["099720109477"] # Canonical
-
-  filter {
-    name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-${var.ubuntu_version}-amd64-server-*"]
-  }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
   }
 }
 
