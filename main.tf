@@ -4,6 +4,14 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
+    tls = {
+      source  = "hashicorp/tls"
+      version = "~> 4.0"
+    }
+    local = {
+      source  = "hashicorp/local"
+      version = "~> 2.4"
+    }
   }
 }
 
@@ -14,6 +22,25 @@ provider "aws" {
 # 获取现有 VPC 信息
 data "aws_vpc" "selected" {
   id = var.vpc_id
+}
+
+# 创建 TLS 私钥
+resource "tls_private_key" "jenkins_key" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+
+# 将私钥保存到本地文件
+resource "local_file" "private_key" {
+  content         = tls_private_key.jenkins_key.private_key_pem
+  filename        = "${var.key_pair_name}.pem"
+  file_permission = "0600"
+}
+
+# 创建 AWS 密钥对
+resource "aws_key_pair" "jenkins" {
+  key_name   = var.key_pair_name
+  public_key = tls_private_key.jenkins_key.public_key_openssh
 }
 
 # 创建 ALB 安全组
@@ -114,18 +141,12 @@ resource "aws_iam_instance_profile" "jenkins_profile" {
   role = aws_iam_role.jenkins_role.name
 }
 
-# 创建密钥对
-resource "aws_key_pair" "deployer" {
-  key_name   = "jenkins-deployer-key"
-  public_key = var.public_key
-}
-
-# 创建 EC2 实例 (无公网IP)
+# 创建 EC2 实例 (无公网IP) - 使用私有子网
 resource "aws_instance" "jenkins_server" {
   ami                         = "ami-0c7217cdde317cfec" # Ubuntu 20.04 LTS in us-east-1
   instance_type               = var.instance_type
-  subnet_id                   = var.private_subnet_id # 使用私有子网
-  key_name                    = aws_key_pair.deployer.key_name
+  subnet_id                   = var.private_subnet_id         # 使用私有子网
+  key_name                    = aws_key_pair.jenkins.key_name # 使用新创建的密钥对
   iam_instance_profile        = aws_iam_instance_profile.jenkins_profile.name
   associate_public_ip_address = false          # 确保不分配公网IP
   private_ip                  = var.private_ip # 可选指定私有IP
@@ -174,7 +195,7 @@ resource "aws_lb_target_group_attachment" "jenkins" {
   port             = var.jenkins_port
 }
 
-# 创建 ALB
+# 创建 ALB - 使用公有子网
 resource "aws_lb" "jenkins" {
   name               = "jenkins-alb"
   internal           = false # 面向互联网的 ALB

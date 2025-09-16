@@ -35,5 +35,15 @@ output "instance_security_group_id" {
 
 output "ssh_connection_command" {
   description = "SSH connection command"
-  value       = "ssh -i your-private-key.pem ubuntu@${aws_instance.jenkins_server.private_ip}"
+  value       = "ssh -i ${var.key_pair_name}.pem ubuntu@${aws_instance.jenkins_server.private_ip}"
+}
+
+output "private_key_filename" {
+  description = "Name of the generated private key file"
+  value       = "${var.key_pair_name}.pem"
+}
+
+output "key_pair_name" {
+  description = "Name of the SSH key pair"
+  value       = var.key_pair_name
 }

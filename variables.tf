@@ -22,12 +22,7 @@ variable "private_subnet_id" {
 variable "instance_type" {
   description = "EC2 instance type"
   type        = string
-  default     = "t3.micro"
-}
-
-variable "public_key" {
-  description = "SSH public key content"
-  type        = string
+  default     = "t3.micro" # 使用符合免费套餐的实例类型
 }
 
 variable "jenkins_port" {
@@ -70,4 +65,10 @@ variable "ubuntu_version" {
   description = "Ubuntu version to use"
   type        = string
   default     = "20.04"
+}
+
+variable "key_pair_name" {
+  description = "Name for the SSH key pair"
+  type        = string
+  default     = "jenkins-key-pair"
 }
