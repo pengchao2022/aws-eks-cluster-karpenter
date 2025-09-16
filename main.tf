@@ -16,12 +16,6 @@ data "aws_vpc" "selected" {
   id = var.vpc_id
 }
 
-# 获取现有子网信息
-data "aws_subnet" "selected" {
-  for_each = toset(var.subnet_ids)
-  id       = each.value
-}
-
 # 创建 ALB 安全组
 resource "aws_security_group" "alb_sg" {
   name        = "jenkins-alb-security-group"

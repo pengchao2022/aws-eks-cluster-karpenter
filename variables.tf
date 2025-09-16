@@ -9,11 +9,6 @@ variable "vpc_id" {
   type        = string
 }
 
-variable "subnet_ids" {
-  description = "List of existing subnet IDs (at least two for ALB)"
-  type        = list(string)
-}
-
 variable "public_subnet_ids" {
   description = "List of public subnet IDs for ALB (at least two)"
   type        = list(string)
