@@ -57,13 +57,13 @@ echo "$JENKINS_PASSWORD"
 # 配置 Jenkins 以支持 ALB 反向代理
 echo "配置 Jenkins 支持 ALB 反向代理..."
 
-# 等待 Jenkins Web 服务完全启动
+# wait for the jenkins service
 while ! curl -s http://localhost:8080/login > /dev/null; do
     echo "等待 Jenkins Web 服务启动..."
     sleep 10
 done
 
-# 修改 Jenkins 配置以支持 ALB
+# make jenkins to support alb
 docker exec jenkins bash -c 'cat > /var/jenkins_home/init.groovy.d/alb-config.groovy << EOF
 import jenkins.model.Jenkins
 import hudson.model.User

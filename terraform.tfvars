@@ -1,11 +1,11 @@
 aws_region = "us-east-1"
-vpc_id     = "vpc-0a4d0ce9036000d08"
+vpc_id     = "vpc-0a346dceeb8b922a6"
 public_subnet_ids = [
-  "subnet-091d2076e9e9c1e3e",
-  "subnet-085330a063b4d170e",
-  "subnet-04ce9d65578c44de0",
+  "subnet-0102416d2c47883c4",
+  "subnet-0e3c240984542b792",
+  "subnet-09f49cec00c38bdc1",
 ] #this is for alb to use
-private_subnet_id = "subnet-021cbefd6098d88a6"
+private_subnet_id = "subnet-0c33850d4d6866396"
 instance_type     = "t3.micro"
 ubuntu_version    = "20.04"
 key_pair_name     = "ssh-for-jenkins-server"
