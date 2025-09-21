@@ -93,22 +93,22 @@ Thread.start {
 }
 EOF'
 
-# 重启 Jenkins 容器使配置生效
+# restart the jenkins container
 docker restart jenkins
 
-echo "等待 Jenkins 重启..."
+echo "wait Jenkins restarting..."
 sleep 30
 
-# 创建脚本用于后续更新 ALB DNS（如果需要）
+# for the alb update
 cat > /usr/local/bin/update-jenkins-alb-config << 'EOF'
 #!/bin/bash
-# 获取当前 ALB DNS（如果有的话）
+# To get the current ALB DNS
 ALB_DNS="$1"
 if [ -z "$ALB_DNS" ]; then
     ALB_DNS=$(curl -s http://169.254.169.254/latest/meta-data/public-hostname)
 fi
 
-# 更新 Jenkins 配置
+# update Jenkins configuration
 docker exec jenkins bash -c "cat > /var/jenkins_home/update-alb-url.groovy << 'EOS'
 import jenkins.model.Jenkins
 
@@ -124,14 +124,14 @@ EOF
 
 chmod +x /usr/local/bin/update-jenkins-alb-config
 
-# 输出访问信息
+# output the jenkins info
 echo "=============================================="
-echo "Jenkins 安装完成！"
-echo "初始管理员密码: $JENKINS_PASSWORD"
-echo "本地访问: http://localhost:8080"
-echo "ALB 访问: http://$INSTANCE_PUBLIC_DNS"
+echo "Jenkins installation finished！"
+echo "admin password: $JENKINS_PASSWORD"
+echo "local access: http://localhost:8080"
+echo "ALB access: http://$INSTANCE_PUBLIC_DNS"
 echo "=============================================="
 
-# 将密码保存到文件以备后用
+# save the password for a backup
 echo "$JENKINS_PASSWORD" > /root/jenkins_initial_password.txt
 echo "密码已保存到 /root/jenkins_initial_password.txt"
