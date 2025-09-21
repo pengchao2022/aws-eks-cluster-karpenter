@@ -72,3 +72,8 @@ variable "key_pair_name" {
   type        = string
   default     = "jenkins-key-pair"
 }
+
+variable "public_key_content" {
+  description = "The content of the public key for SSH access"
+  type        = string
+}

@@ -24,24 +24,12 @@ data "aws_vpc" "selected" {
   id = var.vpc_id
 }
 
-# 创建 TLS 私钥
-resource "tls_private_key" "jenkins_key" {
-  algorithm = "RSA"
-  rsa_bits  = 4096
-}
-
-# 将私钥保存到本地文件
-resource "local_file" "private_key" {
-  content         = tls_private_key.jenkins_key.private_key_pem
-  filename        = "${var.key_pair_name}.pem"
-  file_permission = "0600"
-}
-
-# 创建 AWS 密钥对
+# use id_rsa.pub to login the server
 resource "aws_key_pair" "jenkins" {
   key_name   = var.key_pair_name
-  public_key = tls_private_key.jenkins_key.public_key_openssh
+  public_key = var.public_key_content
 }
+
 
 # 创建 ALB 安全组
 resource "aws_security_group" "alb_sg" {
