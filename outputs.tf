@@ -37,3 +37,4 @@ output "ssh_connection_command" {
   description = "SSH connection command"
   value       = "ssh ubuntu@${aws_instance.jenkins_server.private_ip}"
 }
+

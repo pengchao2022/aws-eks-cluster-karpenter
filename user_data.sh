@@ -1,7 +1,7 @@
 #!/bin/bash
 # 更新系统并安装必要工具
 apt-get update
-apt-get install -y apt-transport-https ca-certificates curl software-properties-common
+apt-get install -y apt-transport-https ca-certificates curl software-properties-common jq
 
 # 安装 Docker
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
@@ -20,17 +20,118 @@ systemctl start docker
 mkdir -p /var/jenkins_home
 chown -R 1000:1000 /var/jenkins_home
 
-# 运行 Jenkins 容器
+# 获取实例的公有DNS名称（用于ALB访问）
+INSTANCE_PUBLIC_DNS=$(curl -s http://169.254.169.254/latest/meta-data/public-hostname)
+# 或者使用实例ID作为临时标识
+INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
+
+# 运行 Jenkins 容器，配置ALB反向代理支持
 docker run -d \
   --name jenkins \
   -p 8080:8080 \
   -p 50000:50000 \
   -v /var/jenkins_home:/var/jenkins_home \
   -v /var/run/docker.sock:/var/run/docker.sock \
+  -e JAVA_OPTS="-Djenkins.model.Jenkins.rootUrl=http://$INSTANCE_PUBLIC_DNS" \
+  -e JENKINS_OPTS="--httpListenAddress=0.0.0.0" \
   --restart unless-stopped \
   jenkins/jenkins:lts
 
-# 等待容器启动并获取初始管理员密码
-sleep 30
+# 等待容器启动
+echo "等待 Jenkins 容器启动..."
+sleep 60
+
+# 获取初始管理员密码
+JENKINS_PASSWORD=$(docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword 2>/dev/null || echo "正在等待密码文件生成...")
+
+# 如果密码文件还未生成，等待并重试
+if [ "$JENKINS_PASSWORD" = "正在等待密码文件生成..." ]; then
+    echo "等待密码文件生成..."
+    sleep 30
+    JENKINS_PASSWORD=$(docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword)
+fi
+
 echo "Jenkins initial admin password:"
-docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword
+echo "$JENKINS_PASSWORD"
+
+# 配置 Jenkins 以支持 ALB 反向代理
+echo "配置 Jenkins 支持 ALB 反向代理..."
+
+# 等待 Jenkins Web 服务完全启动
+while ! curl -s http://localhost:8080/login > /dev/null; do
+    echo "等待 Jenkins Web 服务启动..."
+    sleep 10
+done
+
+# 修改 Jenkins 配置以支持 ALB
+docker exec jenkins bash -c 'cat > /var/jenkins_home/init.groovy.d/alb-config.groovy << EOF
+import jenkins.model.Jenkins
+import hudson.model.User
+import hudson.security.csrf.DefaultCrumbIssuer
+
+// 等待 Jenkins 完全初始化
+Thread.start {
+    sleep(10000)
+    
+    def instance = Jenkins.getInstance()
+    
+    // 设置 rootUrl 为 ALB 的地址
+    def publicDns = "'$INSTANCE_PUBLIC_DNS'".trim()
+    if (publicDns && !publicDns.contains("null")) {
+        instance.setRootUrl("http://" + publicDns)
+        println("设置 Jenkins rootUrl 为: http://" + publicDns)
+    }
+    
+    // 配置 CSRF 以支持反向代理
+    if (instance.getCrumbIssuer() == null) {
+        instance.setCrumbIssuer(new DefaultCrumbIssuer(true))
+        println("已启用 CSRF 保护")
+    }
+    
+    instance.save()
+    println("Jenkins ALB 配置完成")
+}
+EOF'
+
+# 重启 Jenkins 容器使配置生效
+docker restart jenkins
+
+echo "等待 Jenkins 重启..."
+sleep 30
+
+# 创建脚本用于后续更新 ALB DNS（如果需要）
+cat > /usr/local/bin/update-jenkins-alb-config << 'EOF'
+#!/bin/bash
+# 获取当前 ALB DNS（如果有的话）
+ALB_DNS="$1"
+if [ -z "$ALB_DNS" ]; then
+    ALB_DNS=$(curl -s http://169.254.169.254/latest/meta-data/public-hostname)
+fi
+
+# 更新 Jenkins 配置
+docker exec jenkins bash -c "cat > /var/jenkins_home/update-alb-url.groovy << 'EOS'
+import jenkins.model.Jenkins
+
+def instance = Jenkins.getInstance()
+instance.setRootUrl('http://$ALB_DNS')
+instance.save()
+println('Updated Jenkins rootUrl to: http://$ALB_DNS')
+EOS"
+
+docker restart jenkins
+echo "Jenkins ALB configuration updated"
+EOF
+
+chmod +x /usr/local/bin/update-jenkins-alb-config
+
+# 输出访问信息
+echo "=============================================="
+echo "Jenkins 安装完成！"
+echo "初始管理员密码: $JENKINS_PASSWORD"
+echo "本地访问: http://localhost:8080"
+echo "ALB 访问: http://$INSTANCE_PUBLIC_DNS"
+echo "=============================================="
+
+# 将密码保存到文件以备后用
+echo "$JENKINS_PASSWORD" > /root/jenkins_initial_password.txt
+echo "密码已保存到 /root/jenkins_initial_password.txt"
