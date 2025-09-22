@@ -66,27 +66,27 @@ import jenkins.model.Jenkins
 import hudson.model.User
 import hudson.security.csrf.DefaultCrumbIssuer
 
-// 等待 Jenkins 完全初始化
+// waiting for jenkins initialing
 Thread.start {
     sleep(10000)
     
     def instance = Jenkins.getInstance()
     
-    // 设置 rootUrl 为 ALB 的地址
+    // 
     def publicDns = "'$INSTANCE_PUBLIC_DNS'".trim()
     if (publicDns && !publicDns.contains("null")) {
         instance.setRootUrl("http://" + publicDns)
         println("设置 Jenkins rootUrl 为: http://" + publicDns)
     }
     
-    // 配置 CSRF 以支持反向代理
+    // configure CSRF for reverse proxy 
     if (instance.getCrumbIssuer() == null) {
         instance.setCrumbIssuer(new DefaultCrumbIssuer(true))
-        println("已启用 CSRF 保护")
+        println("CSRF done")
     }
     
     instance.save()
-    println("Jenkins ALB 配置完成")
+    println("Jenkins ALB finished configuration")
 }
 EOF'
 
@@ -131,4 +131,4 @@ echo "=============================================="
 
 # save the password for a backup
 echo "$JENKINS_PASSWORD" > /root/jenkins_initial_password.txt
-echo "密码已保存到 /root/jenkins_initial_password.txt"
+echo "password has been saved to: /root/jenkins_initial_password.txt"
