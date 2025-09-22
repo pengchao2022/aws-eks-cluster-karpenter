@@ -19,7 +19,7 @@ provider "aws" {
   region = var.aws_region
 }
 
-# 获取现有 VPC 信息
+# obtain current VPC info
 data "aws_vpc" "selected" {
   id = var.vpc_id
 }
@@ -31,13 +31,13 @@ resource "aws_key_pair" "jenkins" {
 }
 
 
-# 创建 ALB 安全组
+# create sg for alb
 resource "aws_security_group" "alb_sg" {
   name        = "jenkins-alb-security-group"
   description = "Security group for Jenkins ALB"
   vpc_id      = data.aws_vpc.selected.id
 
-  # HTTP 访问
+  # allow http
   ingress {
     from_port   = var.alb_port
     to_port     = var.alb_port
@@ -45,7 +45,7 @@ resource "aws_security_group" "alb_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # 出站规则 - 允许 ALB 访问实例
+  # allow http to access instance
   egress {
     from_port   = 0
     to_port     = 0
@@ -58,13 +58,13 @@ resource "aws_security_group" "alb_sg" {
   }
 }
 
-# 创建实例安全组
+# create sg for instance
 resource "aws_security_group" "jenkins_sg" {
   name        = "jenkins-instance-security-group"
   description = "Security group for Jenkins server"
   vpc_id      = data.aws_vpc.selected.id
 
-  # SSH 访问 (仅允许VPC内部访问)
+  # SSH access
   ingress {
     from_port   = 22
     to_port     = 22
@@ -72,7 +72,7 @@ resource "aws_security_group" "jenkins_sg" {
     cidr_blocks = [data.aws_vpc.selected.cidr_block]
   }
 
-  # 允许 ALB 安全组访问 Jenkins
+  # allow alb sg to access jenkins
   ingress {
     from_port       = var.jenkins_port
     to_port         = var.jenkins_port
@@ -80,7 +80,7 @@ resource "aws_security_group" "jenkins_sg" {
     security_groups = [aws_security_group.alb_sg.id]
   }
 
-  # Jenkins 代理端口 (仅允许VPC内部访问)
+  # Jenkins proxy allow internal
   ingress {
     from_port   = var.agent_port
     to_port     = var.agent_port
@@ -88,7 +88,7 @@ resource "aws_security_group" "jenkins_sg" {
     cidr_blocks = [data.aws_vpc.selected.cidr_block]
   }
 
-  # 出站规则
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -101,7 +101,7 @@ resource "aws_security_group" "jenkins_sg" {
   }
 }
 
-# 创建 IAM 角色和策略
+# create iam role for jenkins 
 resource "aws_iam_role" "jenkins_role" {
   name = "jenkins-ec2-role"
 
@@ -129,15 +129,15 @@ resource "aws_iam_instance_profile" "jenkins_profile" {
   role = aws_iam_role.jenkins_role.name
 }
 
-# 创建 EC2 实例 (无公网IP) - 使用私有子网
+# create EC2 instance
 resource "aws_instance" "jenkins_server" {
   ami                         = "ami-0c7217cdde317cfec" # Ubuntu 20.04 LTS in us-east-1
   instance_type               = var.instance_type
-  subnet_id                   = var.private_subnet_id         # 使用私有子网
-  key_name                    = aws_key_pair.jenkins.key_name # 使用新创建的密钥对
+  subnet_id                   = var.private_subnet_id         # private subnet 
+  key_name                    = aws_key_pair.jenkins.key_name # ssh key 
   iam_instance_profile        = aws_iam_instance_profile.jenkins_profile.name
-  associate_public_ip_address = false          # 确保不分配公网IP
-  private_ip                  = var.private_ip # 可选指定私有IP
+  associate_public_ip_address = false          # no public ip assigned
+  private_ip                  = var.private_ip # assign private ip address
 
   vpc_security_group_ids = [aws_security_group.jenkins_sg.id]
 
@@ -153,7 +153,7 @@ resource "aws_instance" "jenkins_server" {
   }
 }
 
-# 创建目标组
+# create target group for jenkins instance 
 resource "aws_lb_target_group" "jenkins" {
   name     = "jenkins-target-group"
   port     = var.jenkins_port
@@ -176,20 +176,20 @@ resource "aws_lb_target_group" "jenkins" {
   }
 }
 
-# 创建目标组附件
+# create attachment for target group
 resource "aws_lb_target_group_attachment" "jenkins" {
   target_group_arn = aws_lb_target_group.jenkins.arn
   target_id        = aws_instance.jenkins_server.id
   port             = var.jenkins_port
 }
 
-# 创建 ALB - 使用公有子网
+# create alb using public subnet
 resource "aws_lb" "jenkins" {
   name               = "jenkins-alb"
-  internal           = false # 面向互联网的 ALB
+  internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb_sg.id]
-  subnets            = var.public_subnet_ids # 使用公有子网
+  subnets            = var.public_subnet_ids
 
   enable_deletion_protection = false
 
@@ -198,7 +198,7 @@ resource "aws_lb" "jenkins" {
   }
 }
 
-# 创建 ALB 监听器
+# create listener for alb
 resource "aws_lb_listener" "jenkins" {
   load_balancer_arn = aws_lb.jenkins.arn
   port              = var.alb_port
@@ -211,7 +211,7 @@ resource "aws_lb_listener" "jenkins" {
   }
 }
 
-# 如果没有提供证书，创建 HTTP 监听器
+# create listener for http, will be redirect to https
 resource "aws_lb_listener" "jenkins_http_redirect" {
   count = var.alb_certificate_arn != null ? 1 : 0
 

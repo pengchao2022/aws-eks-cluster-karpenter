@@ -1,31 +1,31 @@
 #!/bin/bash
-# 更新系统并安装必要工具
+# update the ubuntu system and install tools
 apt-get update
 apt-get install -y apt-transport-https ca-certificates curl software-properties-common jq
 
-# 安装 Docker
+# install docker
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
 add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 apt-get update
 apt-get install -y docker-ce docker-ce-cli containerd.io
 
-# 将当前用户添加到 docker 组
+# add current user to docker group
 usermod -aG docker ubuntu
 
-# 启动 Docker 服务
+# start docker service
 systemctl enable docker
 systemctl start docker
 
-# 创建 Jenkins 数据目录
+# create jenkins data directory
 mkdir -p /var/jenkins_home
 chown -R 1000:1000 /var/jenkins_home
 
-# 获取实例的公有DNS名称（用于ALB访问）
+# obtain the public dns of instance 
 INSTANCE_PUBLIC_DNS=$(curl -s http://169.254.169.254/latest/meta-data/public-hostname)
-# 或者使用实例ID作为临时标识
+# or use the instance id 
 INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
 
-# 运行 Jenkins 容器，配置ALB反向代理支持
+# run jenkins container
 docker run -d \
   --name jenkins \
   -p 8080:8080 \
@@ -37,16 +37,16 @@ docker run -d \
   --restart unless-stopped \
   jenkins/jenkins:lts
 
-# 等待容器启动
-echo "等待 Jenkins 容器启动..."
+# wait for the start of the container
+echo "wait for the start of the container..."
 sleep 60
 
-# 获取初始管理员密码
+# initial admin password
 JENKINS_PASSWORD=$(docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword 2>/dev/null || echo "正在等待密码文件生成...")
 
-# 如果密码文件还未生成，等待并重试
-if [ "$JENKINS_PASSWORD" = "正在等待密码文件生成..." ]; then
-    echo "等待密码文件生成..."
+# wait for the password written to log
+if [ "$JENKINS_PASSWORD" = "wait for the password written to log..." ]; then
+    echo "wait for the password written to log"
     sleep 30
     JENKINS_PASSWORD=$(docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword)
 fi
@@ -54,12 +54,9 @@ fi
 echo "Jenkins initial admin password:"
 echo "$JENKINS_PASSWORD"
 
-# 配置 Jenkins 以支持 ALB 反向代理
-echo "配置 Jenkins 支持 ALB 反向代理..."
-
 # wait for the jenkins service
 while ! curl -s http://localhost:8080/login > /dev/null; do
-    echo "等待 Jenkins Web 服务启动..."
+    echo "waiting for the jenkins service starting..."
     sleep 10
 done
 

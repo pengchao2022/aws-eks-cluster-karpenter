@@ -22,7 +22,7 @@ variable "private_subnet_id" {
 variable "instance_type" {
   description = "EC2 instance type"
   type        = string
-  default     = "t3.micro" # 使用符合免费套餐的实例类型
+  default     = "t3.micro"
 }
 
 variable "jenkins_port" {
