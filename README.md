@@ -32,7 +32,7 @@ public_key_content = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC2+DSKIw4n9EO8svvfI1
 
 - you can use the shell to get jenkins initial password 
 ```shell
-ocker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword
+docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword
 
 ```
 
